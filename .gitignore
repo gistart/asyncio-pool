@@ -7,7 +7,7 @@
 .env*
 .pypyenv*
 .pytest_*
-.git
+.mypy_cache
 __pycache__
 local_settings.py
 

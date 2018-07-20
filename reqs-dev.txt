@@ -1,3 +1,5 @@
+asyncio
 ipython
 pytest
 pytest-asyncio
+async-timeout

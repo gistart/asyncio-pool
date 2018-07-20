@@ -1,6 +1,12 @@
 # coding: utf8
 
-from .asyncio_pool import AioPool
+import os
+import sys
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.split(curr_dir)[0])
+
+import asyncio as aio
+from asyncio_pool import AioPool
 
 
 async def test(n):
