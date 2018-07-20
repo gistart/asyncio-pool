@@ -1,0 +1,15 @@
+*.swo
+*.swp
+*.pyc
+*.pyo
+*.log
+*.lock
+.env*
+.pypyenv*
+.pytest_*
+.git
+__pycache__
+local_settings.py
+
+!.gitkeep
+!/.gitignore
