@@ -115,43 +115,14 @@ class BaseAioPool(object):
         futures = await self.map_n(fn, iterable)
         await self.join()
 
-        result = []
+        results = []
         for fut in futures:
-            if fut.exception():
-                res = fut.exception() if exc_as_result else None
-            else:
-                res = fut.result()
-            result.append(res)
-        return result
+            res = _get_future_result(fut, exc_as_result)
+            results.append(res)
+        return results
 
     async def iterwait(self, *arg, **kw):  # TODO there's a way to support 3.5?
         raise NotImplementedError('python3.6+ required')
 
     async def itermap(self, *arg, **kw):  # TODO there's a way to support 3.5?
         raise NotImplementedError('python3.6+ required')
-
-    '''
-    if sys.version_info >= (3, 6):  # supports async generators
-
-        async def iterwait(self, futures, *, flat=True, exc_as_result=True,
-                timeout=None, yield_when=aio.ALL_COMPLETED):
-
-            _futures = futures[:]
-            while _futures:
-                done, _futures = await aio.wait(_futures, loop=self.loop,
-                        timeout=timeout, return_when=yield_when)
-                if flat:
-                    for fut in done:
-                        yield _get_future_result(fut, exc_as_result)
-                else:
-                    yield [_get_future_result(f, exc_as_result) for f in done]
-
-        async def itermap(self, fn, iterable, *, flat=True, exc_as_result=True,
-                timeout=None, yield_when=aio.ALL_COMPLETED):
-
-            futures = await self.map_n(fn, iterable)
-            generator = self.iterwait(futures, flat=flat, timeout=timeout,
-                    exc_as_result=exc_as_result, yield_when=yield_when)
-            async for batch in generator:
-                yield batch  # TODO is it possible to return a generator?
-    '''

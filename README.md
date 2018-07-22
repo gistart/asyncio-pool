@@ -115,10 +115,12 @@ async def details(todo=range(1,11)):
 
 ## TODO:
 
-- [ ] cancelled, timeouts
 - [ ] callbacks
+- [ ] setup
+- [ ] cancelled, timeouts
 - [x] tests
+- [ ] loadtests
 - [x] usage
-- [ ] examples
 - [ ] docs
+- [ ] examples
 - [ ] readme

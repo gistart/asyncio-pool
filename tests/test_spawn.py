@@ -16,7 +16,7 @@ async def test_spawns_behaviour():
 
     async with AioPool(size=2) as pool:
         for i in range(1,6):
-            await pool.spawn(wrk(i))  # waits for pool to be awailable
+            await pool.spawn(wrk(i))  # waits for pool to be available
         assert len(started) != 0  # so atm some of workers should start
 
     started.clear()
