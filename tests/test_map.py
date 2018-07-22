@@ -1,5 +1,6 @@
 # coding: utf8
 
+import sys
 import pytest
 import asyncio as aio
 from asyncio_pool import AioPool
@@ -32,3 +33,23 @@ async def test_map_crash():
     res = await pool.map(wrk, task, exc_as_result=False)
     assert res[0] is None
     assert res[1:] == [i*10 for i in task[1:]]
+
+
+@pytest.mark.skipif(sys.version_info < (3,6), reason='3.6+ only')
+@pytest.mark.asyncio
+async def test_itermap():
+
+    async def wrk(n):
+        await aio.sleep(n)
+        return n
+
+    async with AioPool(size=3) as pool:
+        i = 0
+        async for res in pool.itermap(wrk, [0.5] * 4, flat=False, timeout=0.6):
+            if i == 0:
+                assert 15 == int(sum(res) * 10)
+            elif i == 1:
+                assert 5 == int(sum(res) * 10)
+            else:
+                assert False  # should not get here
+            i += 1  # does not support enumerate btw (

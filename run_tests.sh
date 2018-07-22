@@ -1,11 +1,13 @@
 #! /bin/sh
 
+## 3.5 and pypy (which is also 3.5) are disalbed because of async generators
+py35=python3.5
+pypy3=pypy3
 py36=python3.6
 py37=python3.7
-## 3.5 and pypy (which is also 3.5) are disalbed because of async generators
-# py35=python3.5
-# pypy3=/opt/pypy3/pypy3/bin/pypy3
+
 default_env=$py36
+
 
 todo=${@:-"./tests"}
 

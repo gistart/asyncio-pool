@@ -1,12 +1,16 @@
-# asyncio-pool
+# coding: utf8
 
-###### Supports python 3.5+ (including PyPy 6+, which is also 3.5)
+import os
+import sys
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.split(curr_dir)[0])
+
+import itertools
+import asyncio as aio
+from asyncio_pool import AioPool
+from async_timeout import timeout
 
 
-## Usage
-(more in `tests/` and `examples/` dirs): # TODO
-
-```python
 async def worker(n):  # dummy worker
     await aio.sleep(1 / n)
     return n
@@ -109,16 +113,15 @@ async def details(todo=range(1,11)):
     await pool.join()
 
     assert all(f.done() for f in itertools.chain(f1,f2))  # this is guaranteed
+    assert 2 * sum(todo) == sum(f.result() for f in itertools.chain(f1,f2))
 
-```
 
-
-## TODO:
-
-- [ ] cancelled, timeouts
-- [ ] callbacks
-- [x] tests
-- [x] usage
-- [ ] examples
-- [ ] docs
-- [ ] readme
+if __name__ == "__main__":
+    aio.get_event_loop().run_until_complete(aio.gather(
+        spawn_n_usage(),
+        spawn_usage(),
+        map_usage(),
+        itermap_usage(),
+        callbacks_usage(),
+        details()
+    ))

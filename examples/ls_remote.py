@@ -1,5 +1,10 @@
 # coding: utf8
 
+import os
+import sys
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.split(curr_dir)[0])
+
 import logging
 import asyncio as aio
 import json as myformat   # just for a demo
