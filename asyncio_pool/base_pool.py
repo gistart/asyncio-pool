@@ -128,7 +128,11 @@ class BaseAioPool(object):
         return futures
 
     async def map(self, fn, iterable, exc_as_result=True):
-        futures = await self.map_n(fn, iterable)
+        futures = []
+        for it in iterable:
+            fut = await self.spawn(fn(it))
+            futures.append(fut)
+
         await aio.wait(futures)
         return [result_noraise(fut, exc_as_result) for fut in futures]
 

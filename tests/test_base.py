@@ -1,5 +1,6 @@
 # coding: utf8
 
+import sys
 import pytest
 import warnings
 import asyncio as aio
@@ -70,17 +71,17 @@ async def test_outer_join():
     joined = [loop.create_task(outer(j, pool)) for j in to_release]
     await pool.join()
 
-    assert len(released) < len(to_release)
+    assert len(released) <= len(to_release)
     await aio.wait(joined)
     assert len(todo) == len(done) and len(released) == len(to_release)
 
 
-@pytest.mark.filterwarnings('ignore:coroutines')  # doesn't work??
+# @pytest.mark.filterwarnings('ignore:coroutines')  # doesn't work??
+@pytest.mark.skipif((3,6) <= sys.version_info < (3,7) , reason='no 3.6')
 @pytest.mark.asyncio
 async def test_cancel():
     # seems to break other tests in different files in py36 only
     # TODO investigate
-    return True
 
     async def wrk(*arg, **kw):
         await aio.sleep(0.5)

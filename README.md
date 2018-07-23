@@ -4,7 +4,14 @@
 
 
 ## Usage
-(more in `tests/` and `examples/` dirs): # TODO
+
+`spawn` and `map` methods is probably what you should use in 99% of cases. Their overhead is minimal (~3% execution time), and even in worst cases memory usage is insignificant.
+
+`spawn_n`, `map_n` and `itermap` methods give you more control and flexibily, but they come with a price of higher overhead. They spawn all tasks that you want, and most of the tasks wait their turn "in background". If you spawn too much (10**6+ tasks) -- you'll use most of the memory you have in system, also you'll lose a lot of time on "concurrency management" of all the tasks spawned.
+
+Play with `python tests/loadtest.py -h` to understand what you want to use.
+
+#### Usage examples (more in `tests/` and `examples/` dirs):
 
 ```python
 async def worker(n):  # dummy worker
@@ -176,7 +183,7 @@ async def details(todo=range(1,11)):
 - [x] setup
 - [x] cancelled, timeouts
 - [x] tests
-- [ ] loadtests
+- [x] loadtests
 - [x] usage
 - [ ] docs
 - [ ] examples
