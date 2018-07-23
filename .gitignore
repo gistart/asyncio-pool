@@ -8,6 +8,9 @@
 .pypyenv*
 .pytest_*
 .mypy_cache
+dist
+build
+*.egg-info
 __pycache__
 local_settings.py
 

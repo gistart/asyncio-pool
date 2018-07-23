@@ -45,7 +45,7 @@ async def spawn_usage(todo=range(1,4)):
             futures.append(fut)
         # At this point some of the workers already started.
 
-        # Context manager calls `join()` at exit, so this will finish when all
+        # Context manager calls `join` at exit, so this will finish when all
         # workers return, crash or cancelled.
 
     assert sum(todo) == sum(fut.result() for fut in futures)  # all done
@@ -53,11 +53,13 @@ async def spawn_usage(todo=range(1,4)):
 
 async def map_usage(todo=range(100)):
     pool = AioPool(size=10)
-    # Joins internally, collects results from all spawned workers,
+    # Waits and collects results from all spawned workers,
     # returns them in same order as `todo`, if worker crashes or cancelled:
     # returns exception object as a result.
     # Basically, it wraps `spawn_usage` code into one call.
     results = await pool.map(worker, todo)
+
+    # await pool.join()  # is not needed here, bcs no other tasks were spawned
 
     assert isinstance(results[0], ZeroDivisionError) \
         and sum(results[1:]) == sum(todo)
@@ -79,6 +81,61 @@ async def itermap_usage(todo=range(1,11)):
 
 async def callbacks_usage():
     pass  # TODO
+
+
+async def exec_usage(todo=range(1,11)):
+    async with AioPool(size=4) as pool:
+        futures = await pool.map_n(worker, todo)
+
+        # While other workers are waiting or active, you can "synchronously"
+        # execute one task. It does not interrupt  others, just waits for pool
+        # space, then waits for task to finish and then returns it's result.
+        important_res = await pool.exec(worker(2))
+        assert 2 == important_res
+
+        # You can continue working as usual:
+        moar = await pool.spawn(worker(10))
+
+    assert sum(todo) == sum(f.result() for f in futures)
+
+
+async def cancel_usage():
+
+    async def wrk(*arg, **kw):
+        await aio.sleep(0.5)
+        return 1
+
+    pool = AioPool(size=2)
+
+    f_quick = await pool.spawn_n(aio.sleep(0.1))
+    f12 = await pool.spawn(wrk()), await pool.spawn_n(wrk())
+    f35 = await pool.map_n(wrk, range(3))
+
+    # At this point, if you cancel futures, returned by pool methods,
+    # you just won't be able to retrieve spawned task results, task
+    # themselves will continue working. Don't do this:
+    #   f_quick.cancel()
+    # use `pool.cancel` instead:
+
+    # cancel some
+    await aio.sleep(0.1)
+    cancelled, results = await pool.cancel(f12[0], f35[2])  # running and waiting
+    assert 2 == cancelled  # none of them had time to finish
+    assert 2 == len(results) and \
+        all(isinstance(res, aio.CancelledError) for res in results)
+
+    # cancel all others
+    await aio.sleep(0.1)
+
+    # not interrupted and finished successfully
+    assert f_quick.done() and f_quick.result() is None
+
+    cancelled, results = await pool.cancel()  # all
+    assert 3 == cancelled
+    assert len(results) == 3 and \
+        all(isinstance(res, aio.CancelledError) for res in results)
+
+    assert await pool.join()  # joins successfully
 
 
 async def details(todo=range(1,11)):
@@ -123,5 +180,7 @@ if __name__ == "__main__":
         map_usage(),
         itermap_usage(),
         callbacks_usage(),
+        exec_usage(),
+        cancel_usage(),
         details()
     ))

@@ -1,11 +1,12 @@
 # coding: utf8
-'''Mixin for BaseAioPool with async iterator features python3.6+'''
+'''Mixin for BaseAioPool with async generator features, python3.6+'''
 
 import asyncio as aio
-from .utils import _get_future_result
+from .utils import result_noraise
 
 
-class MxAsyncIterPool(object):
+class MxAsyncGenPool(object):
+    ''' Asynchronous generator wrapper for asyncio.wait.'''
 
     async def iterwait(self, futures, *, flat=True, exc_as_result=True,
             timeout=None, yield_when=aio.ALL_COMPLETED):
@@ -16,9 +17,9 @@ class MxAsyncIterPool(object):
                     timeout=timeout, return_when=yield_when)
             if flat:
                 for fut in done:
-                    yield _get_future_result(fut, exc_as_result)
+                    yield result_noraise(fut, exc_as_result)
             else:
-                yield [_get_future_result(f, exc_as_result) for f in done]
+                yield [result_noraise(f, exc_as_result) for f in done]
 
     async def itermap(self, fn, iterable, *, flat=True, exc_as_result=True,
             timeout=None, yield_when=aio.ALL_COMPLETED):

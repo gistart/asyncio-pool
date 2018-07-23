@@ -3,3 +3,6 @@ ipython
 pytest
 pytest-asyncio
 async-timeout
+setuptools
+wheel
+twine
