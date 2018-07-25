@@ -9,6 +9,9 @@ from asyncio_pool import AioPool
 from async_timeout import timeout
 
 
+pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
+
+
 @pytest.mark.asyncio
 async def test_concurrency():
     todo = range(1,21)
@@ -76,12 +79,8 @@ async def test_outer_join():
     assert len(todo) == len(done) and len(released) == len(to_release)
 
 
-# @pytest.mark.filterwarnings('ignore:coroutines')  # doesn't work??
-@pytest.mark.skipif((3,6) <= sys.version_info < (3,7) , reason='no 3.6')
 @pytest.mark.asyncio
 async def test_cancel():
-    # seems to break other tests in different files in py36 only
-    # TODO investigate
 
     async def wrk(*arg, **kw):
         await aio.sleep(0.5)

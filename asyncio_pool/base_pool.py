@@ -2,23 +2,36 @@
 '''Pool of asyncio coroutines with familiar interface, python3.5+ friendly'''
 
 import traceback
-import collections
 import asyncio as aio
 from .utils import result_noraise
 
 
 class BaseAioPool(object):
-    ''' BaseAioPool implements features, supposed to work in all supported
-    python versions. Other features supposed to be implemented as mixins.'''
+    # python3.5 friendly
 
     def __init__(self, size=1024, *, loop=None):
+        '''Pool of asyncio coroutines with familiar interface.
+
+        Pool makes sure _no more_ and _no less_ (if possible) than `size`
+        spawned coroutines are active at the same time. _spawned_ means created
+        and scheduled with one of the pool interface methods, _active_ means
+        coroutine function started executing it's code, as opposed to
+        _waiting_ -- which waits for pool space without entering coroutine
+        function.
+
+        Support asynchronous context management protocol (`aenter`, `aexit`).
+
+        The main idea behind spwaning methods is -- they return newly created
+        futures, not "native" ones, returned by `pool.create_task` or used for
+        `await`. Read more about this in readme and docstrings below.
+        '''
         self.loop = loop or aio.get_event_loop()
 
         self.size = size
         self._executed = 0
         self._joined = set()
         self._waiting = {}  # future -> task
-        self._spawned = {}  # future -> task
+        self._active = {}  # future -> task
         self.semaphore = aio.Semaphore(value=self.size, loop=self.loop)
 
     async def __aenter__(self):
@@ -29,17 +42,23 @@ class BaseAioPool(object):
 
     @property
     def n_active(self):
+        '''Counts active coroutines'''
         return self.size - self.semaphore._value
 
     @property
     def is_empty(self):
+        '''Returns `True` if no coroutines are active or waiting.'''
         return 0 == len(self._waiting) == self.n_active
 
     @property
     def is_full(self):
+        '''Returns `True` if `size` coroutines are already active.'''
         return self.size <= len(self._waiting) + self.n_active
 
     async def join(self):
+        '''Waits (blocks) for all spawned coroutines to finish, both active and
+        waiting. *Do not `join` inside spawned coroutine*.'''
+
         if self.is_empty:
             return True
 
@@ -58,19 +77,48 @@ class BaseAioPool(object):
             if not fut.done():
                 fut.set_result(True)
 
+    def _build_callback(self, cb, res, err=None, ctx=None):
+        # not sure if this is a safe code( in case any error:
+        # return cb(res, err, ctx), None
+
+        bad_cb = RuntimeError('cb should accept at least one argument')
+        to_pass = (res, err, ctx)
+
+        nargs = cb.__code__.co_argcount
+        if nargs == 0:
+            return None, bad_cb
+
+        # trusting user here, better ideas?
+        if cb.__code__.co_varnames[0] in ('self', 'cls'):
+            nargs -= 1  # class/instance method, skip first arg
+
+        if nargs == 0:
+            return None, bad_cb
+
+        try:
+            return cb(*to_pass[:nargs]), None
+        except Exception as e:
+            return None, e
+
     async def _wrap(self, coro, future, cb=None, ctx=None):
         res, exc, tb = None, None, None
         try:
             res = await coro
         except Exception as _exc:
             exc = _exc
-            tb = traceback.format_exc()  # TODO tb object instead of text
+            tb = traceback.format_exc()
         finally:
             self._executed += 1
 
-        if cb:
+        while cb:
             err = None if exc is None else (exc, tb)
-            wrapped = self._wrap(cb(res, err, ctx), future)
+
+            _cb, _cb_err = self._build_callback(cb, res, err, ctx)
+            if _cb_err is not None:
+                exc = _cb_err  # pass to future
+                break
+
+            wrapped = self._wrap(_cb, future)
             self.loop.create_task(wrapped)
             return
 
@@ -82,7 +130,7 @@ class BaseAioPool(object):
             else:
                 future.set_result(res)
 
-        del self._spawned[future]
+        del self._active[future]
         if self.is_empty:
             self._release_joined()
 
@@ -103,34 +151,81 @@ class BaseAioPool(object):
         else:  # all good, can spawn now
             wrapped = self._wrap(coro, future, cb=cb, ctx=ctx)
             task = self.loop.create_task(wrapped)
-            self._spawned[future] = task
+            self._active[future] = task
         return future
 
+    async def spawn(self, coro, cb=None, ctx=None):
+        '''Waits for pool space and creates task for given `coro` coroutine,
+        returns a future for it's result.
+
+        If callback `cb` coroutine function (not coroutine itself!) is passed,
+        `coro` result won't be assigned to created future, instead, `cb` will
+        be executed with it as a first positional argument. Callback function
+        should accept 1,2 or 3 positional arguments. Full callback sigature is
+        `cb(res, err, ctx)`. It makes no sense to create a callback without
+        `coro` result, so first positional argument is mandatory.
+
+        Second positional argument of callback will be error, which `is None`
+        if coroutine did not crash and wasn't cancelled. In case any exception
+        was raised during `coro` execution, error will be a tuple containing
+        (`exc` exception object, `tb` traceback string). if you wish to ignore
+        errors, you can pass callback without seconds and third positional
+        arguments.
+
+        If context `ctx` is passed to `spawn`, it will be re-sent to callback
+        as third argument. If you don't plan to use any context, you can create
+        callback with positional arguments only for result and error.
+        '''
+        future = self.loop.create_future()
+        self._waiting[future] = self.loop.create_future()  # as a placeholder
+        return await self._spawn(future, coro, cb=cb, ctx=ctx)
+
     async def spawn_n(self, coro, cb=None, ctx=None):
+        '''Creates waiting task for given `coro` regardless of pool space. If
+        pool is not full, this task will be executed very soon. Main difference
+        is that `spawn_n` does not block and returns future very quickly.
+
+        Read more about callbacks in `spawn` docstring.
+        '''
         future = self.loop.create_future()
         task = self.loop.create_task(self._spawn(future, coro, cb=cb, ctx=ctx))
         self._waiting[future] = task
         return future
 
-    async def spawn(self, coro, cb=None, ctx=None):
-        future = self.loop.create_future()
-        self._waiting[future] = self.loop.create_future()  # TODO omg ???
-        return await self._spawn(future, coro, cb=cb, ctx=ctx)
-
     async def exec(self, coro, cb=None, ctx=None):
-        return await (await self.spawn(coro, cb=cb, ctx=ctx))
+        '''Waits for pool space, then waits for `coro` (and it's callback if
+        passed) to finish, returning result of `coro` or callback (if passed),
+        or raising error if smth crashed in process or was cancelled.
 
-    async def map_n(self, fn, iterable):
+        Read more about callbacks in `spawn` docstring.
+        '''
+        return await (await self.spawn(coro, cb, ctx))
+
+    async def map_n(self, fn, iterable, cb=None, ctx=None):
+        '''Creates coroutine with `fn` function for each item in `iterable`,
+        spawns each of them with `spawn_n`, returning futures.
+
+        Read more about callbacks in `spawn` docstring.
+        '''
         futures = []
         for it in iterable:
-            fut = await self.spawn_n(fn(it))
+            fut = await self.spawn_n(fn(it), cb, ctx)
             futures.append(fut)
         return futures
 
-    async def map(self, fn, iterable, exc_as_result=True):
+    async def map(self, fn, iterable, cb=None, ctx=None, *, exc_as_result=True):
+        '''Spawns coroutines, created with `fn` function for each item in
+        `iterable`, waits for all of them to finish, crash or be cancelled,
+        returning resuls.
+
+        If coroutine or callback crashes or is cancelled, with `exc_as_result`
+        == True exceptions object will be returned, with == False -- just None.
+
+        Read more about callbacks in `spawn` docstring.
+        '''
         futures = []
         for it in iterable:
-            fut = await self.spawn(fn(it))
+            fut = await self.spawn(fn(it), cb, ctx)
             futures.append(fut)
 
         await aio.wait(futures)
@@ -147,12 +242,12 @@ class BaseAioPool(object):
 
         if not len(futures):  # meaning cancel all
             tasks.extend(self._waiting.values())
-            tasks.extend(self._spawned.values())
+            tasks.extend(self._active.values())
             _futures.extend(self._waiting.keys())
-            _futures.extend(self._spawned.keys())
+            _futures.extend(self._active.keys())
         else:
             for fut in futures:
-                task = self._spawned.get(fut, self._waiting.get(fut))
+                task = self._active.get(fut, self._waiting.get(fut))
                 if task:
                     tasks.append(task)
                     _futures.append(fut)
@@ -161,6 +256,15 @@ class BaseAioPool(object):
         return cancelled, _futures
 
     async def cancel(self, *futures, exc_as_result=True):
+        '''Cancels spawned or waiting tasks, found by their `futures`. If no
+        `futures` are passed -- cancels all spwaned and waiting tasks.
+
+        Cancelling futures, returned by pool methods, usually won't help you
+        to cancel executing tasks, so you have to use this method.
+
+        Returns tuple of (`cancelled` count of cancelled tasks, `results`
+        collected from futures of cancelled tasks).
+        '''
         cancelled, _futures = self._cancel(*futures)
         await aio.sleep(0)  # let them actually cancel
         # need to collect them anyway, to supress warnings

@@ -22,7 +22,7 @@ do
             echo "$pyname: virtual env does not exist"
         else
             echo "$pyname: running for $todo"
-            $envname/bin/pytest $todo
+            $envname/bin/pytest --continue-on-collection-errors $todo
         fi
     else
         echo "$py: not found"

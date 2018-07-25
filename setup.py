@@ -9,7 +9,7 @@ with open('README.md') as fd:
 
 setuptools.setup(
     name='asyncio_pool',
-    version='0.2.0',
+    version='0.4.0',
     author='gistart',
     author_email='gistart@yandex.ru',
     description='Pool of asyncio coroutines with familiar interface',
@@ -18,7 +18,7 @@ setuptools.setup(
     url='https://github.com/gistart/asyncio-pool',
     license='MIT',
     packages=['asyncio_pool'],
-    install_requires=['asyncio'],
+    # install_requires=['asyncio'],  # where " openstack/deb-python-trollius asyncio" comes from???
     python_requires='>=3.5',
     classifiers=(
         "Programming Language :: Python :: 3",

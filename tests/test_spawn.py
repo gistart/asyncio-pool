@@ -1,8 +1,12 @@
 # coding: utf8
 
+import sys
 import pytest
 import asyncio as aio
 from asyncio_pool import AioPool
+
+
+pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
 
 
 @pytest.mark.asyncio

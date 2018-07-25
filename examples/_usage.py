@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.split(curr_dir)[0])
 import itertools
 import asyncio as aio
 from asyncio_pool import AioPool
-from async_timeout import timeout
+#<<from_here
 
 
 async def worker(n):  # dummy worker
@@ -80,7 +80,47 @@ async def itermap_usage(todo=range(1,11)):
 
 
 async def callbacks_usage():
-    pass  # TODO
+
+    async def wrk(n):  # custom dummy worker
+        await aio.sleep(1 / n)
+        return n
+
+    async def cb(res, err, ctx):  # callback
+        if err:  # error handling
+            exc, tb = err
+            assert tb  # the only purpose of this is logging
+            return exc
+
+        pool, n = ctx  # context can be anything you like
+        await aio.sleep(1 / (n-1))
+        return res + n
+
+    todo = range(5)
+    futures = []
+
+    async with AioPool(size=2) as pool:
+        for i in todo:
+            fut = await pool.spawn_n(wrk(i), cb, (pool, i))
+            futures.append(fut)
+
+    results = []
+    for fut in futures:
+        # there's a helper with this code:
+        #   from asyncio_pool import result_noraise
+        #   results.append(result_noraise(fut))
+        try:
+            results.append(fut.result())
+        except Exception as e:
+            results.append(e)
+
+    # First error happens for n == 0 in wrk, exception of it is passed to
+    # callback, callback returns it to us. Second one happens in callback itself
+    # and is passed to us by pool.
+    assert all(isinstance(e, ZeroDivisionError) for e in results[:2])
+
+    # All n's in `todo` are passed through `wrk` and `cb` (cb adds wrk result
+    # and # number, passed inside context), except for n == 0 and n == 1.
+    assert sum(results[2:]) == 2 * (sum(todo) - 0 - 1)
 
 
 async def exec_usage(todo=range(1,11)):
@@ -173,6 +213,7 @@ async def details(todo=range(1,11)):
     assert 2 * sum(todo) == sum(f.result() for f in itertools.chain(f1,f2))
 
 
+#>>to_here
 if __name__ == "__main__":
     aio.get_event_loop().run_until_complete(aio.gather(
         spawn_n_usage(),

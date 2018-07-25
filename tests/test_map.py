@@ -6,6 +6,9 @@ import asyncio as aio
 from asyncio_pool import AioPool
 
 
+pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
+
+
 async def wrk(n):
     await aio.sleep(1 / n)
     return n*10
