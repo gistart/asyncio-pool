@@ -6,7 +6,7 @@ AioPool makes sure _no more_ and _no less_ (if possible) than `size` spawned cor
 
 ## Interface
 
-Read [code doctrings](../blob/master/asyncio_pool/base_pool.py) for details.
+Read [code doctrings](../master/asyncio_pool/base_pool.py) for details.
 
 ##### AioPool(size=4, *, loop=None)
 
@@ -54,7 +54,7 @@ Spawns tasks with `map_n(fn, iterable, cb, ctx)`, then waits for results with `a
 
 Play with `python tests/loadtest.py -h` to understand what you want to use.
 
-Usage examples (more in `tests/` and `examples/` dirs):
+Usage examples (more in [tests/](../master/tests/) and [examples/](../master/examples/)):
 
 ```python
 
