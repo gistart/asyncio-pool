@@ -66,7 +66,6 @@ async def map_usage(todo=range(100)):
 
 
 async def itermap_usage(todo=range(1,11)):
-    # Python 3.6+
     result = 0
     async with AioPool(size=10) as pool:
         # Combines spawn_n and iterwait, which is a wrapper for asyncio.wait,

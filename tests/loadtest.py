@@ -53,19 +53,15 @@ async def loadtest_itermap(tasks, pool_size, duration):
 
 def print_stats(args, exec_time):
     ideal = args.task_duration * (args.tasks / args.pool_size)
-
     overhead = exec_time - ideal
+    per_task = overhead / args.tasks
     overhead_perc = ((exec_time / ideal) - 1) * 100
 
-    per_task = overhead / args.tasks
-    per_task_perc = (((args.task_duration + per_task) / args.task_duration) - 1) * 100
-
     print(f'{ideal:15.5f}s -- ideal result')
-    print(f'{exec_time:15.5f}s -- were executing')
-    print(f'{overhead:15.5f}s -- overhead total')
-    print(f'{overhead_perc:15.5f}% -- overhead total percent')
+    print(f'{exec_time:15.5f}s -- total executing time')
+    print(f'{overhead:15.5f}s -- total overhead')
     print(f'{per_task:15.5f}s -- overhead per task')
-    print(f'{per_task_perc:15.5f}% -- overhead per task percent')
+    print(f'{overhead_perc:13.3f}%   -- overhead total percent')
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 # coding: utf8
 
-import asyncio as aio
-
 
 def result_noraise(future, exc_as_result=True):
     try:
-        return future.result()
+        res = future.result()
+        return res if exc_as_result else (res, None)
     except Exception as exc:
-        return exc if exc_as_result else None
+        # TODO traceback ??
+        return exc if exc_as_result else (None, exc)

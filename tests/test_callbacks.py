@@ -58,20 +58,19 @@ async def test_map_n():
     assert 2 * sum(todo) == sum(results)
 
 
-@pytest.mark.skipif(sys.version_info < (3,6), reason='3.6+ only')
+@pytest.mark.parametrize('timeout', [None, 0.1, 2])
 @pytest.mark.asyncio
-async def test_itermap():
+async def test_itermap(timeout):
     todo = range(2,11)
 
     res = 0
     async with AioPool(size=3) as pool:
-        async for i in pool.itermap(wrk, todo, cb):
+        async for i in pool.itermap(wrk, todo, cb, timeout=timeout):
             res += i
 
     assert 2 * sum(todo) == res
 
 
-# @pytest.mark.skip(reason='xyz')
 @pytest.mark.asyncio
 async def test_callback_types():
 

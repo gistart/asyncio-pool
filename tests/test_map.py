@@ -32,13 +32,13 @@ async def test_map_crash():
     assert isinstance(res[0], Exception)
     assert res[1:] == [i*10 for i in task[1:]]
 
-    # None as result
+    # tuple as result
     res = await pool.map(wrk, task, exc_as_result=False)
-    assert res[0] is None
-    assert res[1:] == [i*10 for i in task[1:]]
+    assert res[0][0] is None and isinstance(res[0][1], ZeroDivisionError)
+    assert [r[0] for r in res[1:]] == [i*10 for i in task[1:]] and \
+        not any(r[1] for r in res[1:])
 
 
-@pytest.mark.skipif(sys.version_info < (3,6), reason='3.6+ only')
 @pytest.mark.asyncio
 async def test_itermap():
 

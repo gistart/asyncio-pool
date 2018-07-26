@@ -7,7 +7,6 @@ from .utils import result_noraise
 
 
 class BaseAioPool(object):
-    # python3.5 friendly
 
     def __init__(self, size=1024, *, loop=None):
         '''Pool of asyncio coroutines with familiar interface.
@@ -231,11 +230,13 @@ class BaseAioPool(object):
         await aio.wait(futures)
         return [result_noraise(fut, exc_as_result) for fut in futures]
 
-    async def iterwait(self, *arg, **kw):  # TODO there's a way to support 3.5?
-        raise NotImplementedError('python3.6+ required')
-
-    async def itermap(self, *arg, **kw):  # TODO there's a way to support 3.5?
-        raise NotImplementedError('python3.6+ required')
+    async def itermap(self, fn, iterable, cb=None, ctx=None, *, flat=True,
+            exc_as_result=True, timeout=None, yield_when=aio.ALL_COMPLETED):
+        '''Spawns coroutines created with `fn` for each item in `iterable`, then
+        waits for results with `iterwait` (implementation specific). See docs
+        for `map_n` and `iterwait` (in mixins for py3.5 and py3.6+).
+        '''
+        raise NotImplementedError('Use one of mixins')
 
     def _cancel(self, *futures):
         tasks, _futures = [], []

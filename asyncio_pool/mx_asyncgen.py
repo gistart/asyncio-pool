@@ -31,9 +31,8 @@ async def iterwait(futures, *, flat=True, exc_as_result=True,
 class MxAsyncGenPool(object):
     # Asynchronous generator wrapper for asyncio.wait.
 
-    async def itermap(self, fn, iterable, cb=None, ctx=None, *,
-            flat=True, exc_as_result=True, timeout=None,
-            yield_when=aio.ALL_COMPLETED):
+    async def itermap(self, fn, iterable, cb=None, ctx=None, *, flat=True,
+            exc_as_result=True, timeout=None, yield_when=aio.ALL_COMPLETED):
         '''Spawns coroutines created with `fn` for each item in `iterable`, then
         waits for results with `iterwait`. See docs for `map_n` and `iterwait`.
         '''

@@ -3,8 +3,14 @@
 import setuptools
 
 
+github_url = 'https://github.com/gistart/asyncio-pool'
+
+readme_lines = []
 with open('README.md') as fd:
-    readme = fd.read()
+    readme_lines = filter(None, fd.read().splitlines())
+readme_lines = list(readme_lines)[:3]
+readme_lines.append('Read more at [github page](%s).' % github_url)
+readme = '\n\n'.join(readme_lines)
 
 
 setuptools.setup(
@@ -15,7 +21,7 @@ setuptools.setup(
     description='Pool of asyncio coroutines with familiar interface',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url='https://github.com/gistart/asyncio-pool',
+    url=github_url,
     license='MIT',
     packages=['asyncio_pool'],
     # install_requires=['asyncio'],  # where " openstack/deb-python-trollius asyncio" comes from???
