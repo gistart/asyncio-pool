@@ -104,9 +104,10 @@ async def callbacks_usage():
 
     results = []
     for fut in futures:
-        # there's a helper with this code:
-        #   from asyncio_pool import result_noraise
-        #   results.append(result_noraise(fut))
+        # there are helpers for result extraction. `flat` one will do
+        # exactly what's written below
+        #   from asyncio_pool import getres
+        #   results.append(getres.flat(fut))
         try:
             results.append(fut.result())
         except Exception as e:

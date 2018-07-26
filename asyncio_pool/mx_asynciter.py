@@ -4,18 +4,18 @@
 import asyncio as aio
 from collections import deque
 from functools import partial
-from .utils import result_noraise
+from .results import getres
 
 
 class iterwait:
 
-    def __init__(self, futures, *, flat=True, exc_as_result=True,
+    def __init__(self, futures, *, flat=True, get_result=getres.flat,
             timeout=None, yield_when=aio.ALL_COMPLETED, loop=None):
 
         self.results = deque()
         self.flat = flat
         self._futures = futures
-        self._extract = partial(result_noraise, exc_as_result=exc_as_result)
+        self._getres = get_result
         self._wait = partial(aio.wait, timeout=timeout, loop=loop,
                              return_when=yield_when)
 
@@ -33,7 +33,7 @@ class iterwait:
         while True:
             done, self._futures = await self._wait(self._futures)
             if done:
-                batch = [self._extract(fut) for fut in done]
+                batch = [self._getres(fut) for fut in done]
                 if self.flat:
                     self.results.extend(batch)
                 else:
@@ -44,13 +44,14 @@ class iterwait:
 class MxAsyncIterPool(object):
 
     def itermap(self, fn, iterable, cb=None, ctx=None, *, flat=True,
-            exc_as_result=True, timeout=None, yield_when=aio.ALL_COMPLETED):
+            get_result=getres.flat, timeout=None,
+            yield_when=aio.ALL_COMPLETED):
         '''Spawns coroutines created with `fn` for each item in `iterable`, then
         waits for results with `iterwait`. See docs for `map_n` and `iterwait`.
         '''
         mk_map = partial(self.map_n, fn, iterable, cb=cb, ctx=ctx)
         mk_waiter = partial(iterwait, flat=flat, loop=self.loop,
-                            exc_as_result=exc_as_result, timeout=timeout,
+                            get_result=get_result, timeout=timeout,
                             yield_when=yield_when)
 
         class _itermap:

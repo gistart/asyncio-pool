@@ -3,7 +3,7 @@
 import sys
 import pytest
 import asyncio as aio
-from asyncio_pool import AioPool, result_noraise
+from asyncio_pool import AioPool, getres
 
 
 pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
@@ -34,7 +34,7 @@ async def test_spawn_n():
             fut = await pool.spawn_n(wrk(i), cb, ctx)
             futures.append(fut)
 
-    results = [result_noraise(f) for f in futures]
+    results = [getres.flat(f) for f in futures]
     assert all(isinstance(e, ZeroDivisionError) for e in results[:2])
     assert sum(results[2:]) == 2 * (sum(todo) - 0 - 1)
 
@@ -54,7 +54,7 @@ async def test_map_n():
     async with AioPool(size=3) as pool:
         futures = await pool.map_n(wrk, todo, cb)
 
-    results = [result_noraise(f) for f in futures]
+    results = [getres.flat(f) for f in futures]
     assert 2 * sum(todo) == sum(results)
 
 
@@ -134,7 +134,7 @@ async def test_callback_types():
         await aio.sleep(0)
         return n
 
-    _r = result_noraise
+    _r = getres.flat
     _ctx = (123, 456, [1,2], {3,4})
     inst = CbCls()
 

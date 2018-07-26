@@ -2,7 +2,7 @@
 
 import sys
 
-from .utils import result_noraise
+from .results import getres
 from .base_pool import BaseAioPool
 
 

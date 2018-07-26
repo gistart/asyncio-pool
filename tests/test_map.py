@@ -3,7 +3,7 @@
 import sys
 import pytest
 import asyncio as aio
-from asyncio_pool import AioPool
+from asyncio_pool import AioPool, getres
 
 
 pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
@@ -28,12 +28,12 @@ async def test_map_crash():
     pool = AioPool(size=10)
 
     # exc as result
-    res = await pool.map(wrk, task)
+    res = await pool.map(wrk, task, get_result=getres.flat)
     assert isinstance(res[0], Exception)
     assert res[1:] == [i*10 for i in task[1:]]
 
     # tuple as result
-    res = await pool.map(wrk, task, exc_as_result=False)
+    res = await pool.map(wrk, task, get_result=getres.pair)
     assert res[0][0] is None and isinstance(res[0][1], ZeroDivisionError)
     assert [r[0] for r in res[1:]] == [i*10 for i in task[1:]] and \
         not any(r[1] for r in res[1:])

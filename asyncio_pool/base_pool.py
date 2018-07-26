@@ -3,7 +3,7 @@
 
 import traceback
 import asyncio as aio
-from .utils import result_noraise
+from .results import getres
 
 
 class BaseAioPool(object):
@@ -212,13 +212,20 @@ class BaseAioPool(object):
             futures.append(fut)
         return futures
 
-    async def map(self, fn, iterable, cb=None, ctx=None, *, exc_as_result=True):
+    async def map(self, fn, iterable, cb=None, ctx=None, *,
+            get_result=getres.flat):
         '''Spawns coroutines, created with `fn` function for each item in
         `iterable`, waits for all of them to finish, crash or be cancelled,
         returning resuls.
 
-        If coroutine or callback crashes or is cancelled, with `exc_as_result`
-        == True exceptions object will be returned, with == False -- just None.
+        `get_result` is function, that accepts future as only positional
+        argument, whose goal is to extract result from future. You can pass
+        your own, or use inluded `getres` object, that has 3 extractors:
+        `getres.dont` will return future untouched, `getres.flat` will return
+        exception object if coroutine crashed or was cancelled, otherwise will
+        return result of a coroutine (or of the callback), `getres.pair` will
+        return tuple of (`result', 'exception` object) with None in place of
+        missing item.
 
         Read more about callbacks in `spawn` docstring.
         '''
@@ -228,10 +235,10 @@ class BaseAioPool(object):
             futures.append(fut)
 
         await aio.wait(futures)
-        return [result_noraise(fut, exc_as_result) for fut in futures]
+        return [get_result(fut) for fut in futures]
 
     async def itermap(self, fn, iterable, cb=None, ctx=None, *, flat=True,
-            exc_as_result=True, timeout=None, yield_when=aio.ALL_COMPLETED):
+            get_result=getres.flat, timeout=None, yield_when=aio.ALL_COMPLETED):
         '''Spawns coroutines created with `fn` for each item in `iterable`, then
         waits for results with `iterwait` (implementation specific). See docs
         for `map_n` and `iterwait` (in mixins for py3.5 and py3.6+).
@@ -256,7 +263,7 @@ class BaseAioPool(object):
         cancelled = sum([1 for fut in tasks if fut.cancel()])
         return cancelled, _futures
 
-    async def cancel(self, *futures, exc_as_result=True):
+    async def cancel(self, *futures, get_result=getres.flat):
         '''Cancels spawned or waiting tasks, found by their `futures`. If no
         `futures` are passed -- cancels all spwaned and waiting tasks.
 
@@ -269,5 +276,5 @@ class BaseAioPool(object):
         cancelled, _futures = self._cancel(*futures)
         await aio.sleep(0)  # let them actually cancel
         # need to collect them anyway, to supress warnings
-        results = [result_noraise(fut, exc_as_result) for fut in _futures]
+        results = [get_result(fut) for fut in _futures]
         return cancelled, results

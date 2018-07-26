@@ -2,10 +2,10 @@
 '''Mixin for BaseAioPool with async generator features, python3.6+'''
 
 import asyncio as aio
-from .utils import result_noraise
+from .results import getres
 
 
-async def iterwait(futures, *, flat=True, exc_as_result=True,
+async def iterwait(futures, *, flat=True, get_result=getres.flat,
         timeout=None, yield_when=aio.ALL_COMPLETED, loop=None):
     '''Wraps `asyncio.wait` into asynchronous generator, accessible with
     `async for` syntax. May be useful in conjunction with `spawn_n`.
@@ -23,22 +23,22 @@ async def iterwait(futures, *, flat=True, exc_as_result=True,
                                         return_when=yield_when, loop=loop)
         if flat:
             for fut in done:
-                yield result_noraise(fut, exc_as_result)
+                yield get_result(fut)
         else:
-            yield [result_noraise(f, exc_as_result) for f in done]
+            yield [get_result(fut) for fut in done]
 
 
 class MxAsyncGenPool(object):
     # Asynchronous generator wrapper for asyncio.wait.
 
     async def itermap(self, fn, iterable, cb=None, ctx=None, *, flat=True,
-            exc_as_result=True, timeout=None, yield_when=aio.ALL_COMPLETED):
+            get_result=getres.flat, timeout=None,
+            yield_when=aio.ALL_COMPLETED):
         '''Spawns coroutines created with `fn` for each item in `iterable`, then
         waits for results with `iterwait`. See docs for `map_n` and `iterwait`.
         '''
         futures = await self.map_n(fn, iterable, cb, ctx)
         generator = iterwait(futures, flat=flat, timeout=timeout,
-                exc_as_result=exc_as_result, yield_when=yield_when,
-                loop=self.loop)
+                get_result=get_result, yield_when=yield_when, loop=self.loop)
         async for batch in generator:
             yield batch  # TODO is it possible to return a generator?

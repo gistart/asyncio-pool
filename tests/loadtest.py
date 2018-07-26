@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.split(curr_dir)[0])
 import time
 import argparse
 import asyncio as aio
-from asyncio_pool import AioPool, result_noraise
+from asyncio_pool import AioPool, getres
 
 
 async def loadtest_spawn(tasks, pool_size, duration):
@@ -18,7 +18,7 @@ async def loadtest_spawn(tasks, pool_size, duration):
             fut = await pool.spawn(aio.sleep(duration))
             futures.append(fut)
 
-    return [result_noraise(f) for f in futures]
+    return [getres.flat(fut) for fut in futures]
 
 
 async def loadtest_spawn_n(tasks, pool_size, duration):
@@ -28,7 +28,7 @@ async def loadtest_spawn_n(tasks, pool_size, duration):
             fut = await pool.spawn_n(aio.sleep(duration))
             futures.append(fut)
 
-    return [result_noraise(f) for f in futures]
+    return [getres.flat(f) for f in futures]
 
 
 async def loadtest_map(tasks, pool_size, duration):
