@@ -39,6 +39,9 @@ class BaseAioPool(object):
     async def __aexit__(self, ext_type, exc, tb):
         await self.join()
 
+    def __len__(self):
+        return len(self._waiting) + self.n_active
+
     @property
     def n_active(self):
         '''Counts active coroutines'''
@@ -52,7 +55,7 @@ class BaseAioPool(object):
     @property
     def is_full(self):
         '''Returns `True` if `size` coroutines are already active.'''
-        return self.size <= len(self._waiting) + self.n_active
+        return self.size <= len(self)
 
     async def join(self):
         '''Waits (blocks) for all spawned coroutines to finish, both active and
