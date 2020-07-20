@@ -248,10 +248,19 @@ class BaseAioPool(object):
         '''
         raise NotImplementedError('Use one of mixins')
 
-    def _cancel(self, *futures):
+    async def cancel(self, *futures, get_result=getres.flat):
+        '''Cancels spawned or waiting tasks, found by their `futures`. If no
+        `futures` are passed -- cancels all spwaned and waiting tasks.
+
+        Cancelling futures, returned by pool methods, usually won't help you
+        to cancel executing tasks, so you have to use this method.
+
+        Returns tuple of (`cancelled` count of cancelled tasks, `results`
+        collected from futures of cancelled tasks).
+        '''
         tasks, _futures = [], []
 
-        if not len(futures):  # meaning cancel all
+        if not futures:  # meaning cancel all
             tasks.extend(self._waiting.values())
             tasks.extend(self._active.values())
             _futures.extend(self._waiting.keys())
@@ -263,21 +272,7 @@ class BaseAioPool(object):
                     tasks.append(task)
                     _futures.append(fut)
 
-        cancelled = sum([1 for fut in tasks if fut.cancel()])
-        return cancelled, _futures
-
-    async def cancel(self, *futures, get_result=getres.flat):
-        '''Cancels spawned or waiting tasks, found by their `futures`. If no
-        `futures` are passed -- cancels all spwaned and waiting tasks.
-
-        Cancelling futures, returned by pool methods, usually won't help you
-        to cancel executing tasks, so you have to use this method.
-
-        Returns tuple of (`cancelled` count of cancelled tasks, `results`
-        collected from futures of cancelled tasks).
-        '''
-        cancelled, _futures = self._cancel(*futures)
-        await aio.sleep(0)  # let them actually cancel
+        cancelled = sum(1 for task in tasks if task.cancel())
+        await aio.wait(tasks)  # let them actually cancel
         # need to collect them anyway, to supress warnings
-        results = [get_result(fut) for fut in _futures]
-        return cancelled, results
+        return cancelled, [get_result(fut) for fut in _futures]
