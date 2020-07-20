@@ -110,7 +110,7 @@ async def callbacks_usage():
         #   results.append(getres.flat(fut))
         try:
             results.append(fut.result())
-        except Exception as e:
+        except BaseException as e:
             results.append(e)
 
     # First error happens for n == 0 in wrk, exception of it is passed to

@@ -106,7 +106,7 @@ class BaseAioPool(object):
         res, exc, tb = None, None, None
         try:
             res = await coro
-        except Exception as _exc:
+        except BaseException as _exc:
             exc = _exc
             tb = traceback.format_exc()
         finally:
@@ -140,7 +140,7 @@ class BaseAioPool(object):
         acq_error = False
         try:
             await self.semaphore.acquire()
-        except Exception as e:
+        except BaseException as e:
             acq_error = True
             if not future.done():
                 future.set_exception(e)
