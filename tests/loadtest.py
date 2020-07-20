@@ -25,7 +25,7 @@ async def loadtest_spawn_n(tasks, pool_size, duration):
     futures = []
     async with AioPool(size=pool_size) as pool:
         for i in range(tasks):
-            fut = await pool.spawn_n(aio.sleep(duration))
+            fut = pool.spawn_n(aio.sleep(duration))
             futures.append(fut)
 
     return [getres.flat(f) for f in futures]

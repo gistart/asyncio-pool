@@ -70,7 +70,7 @@ async def test_outer_join():
     loop = aio.get_event_loop()
     pool = AioPool(size=100)
 
-    tasks = pool.map_n(inner, todo)
+    pool.map_n(inner, todo)
     joined = [loop.create_task(outer(j, pool)) for j in to_release]
     await pool.join()
 

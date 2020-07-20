@@ -27,7 +27,7 @@ async def test_spawns_behaviour():
 
     async with AioPool(size=2) as pool:
         for i in range(1,6):
-            await pool.spawn_n(wrk(i))  # does not wait for pool, just spawns waiting coros
+            pool.spawn_n(wrk(i))  # does not wait for pool, just spawns waiting coros
         assert len(started) == 0  # so atm no worker should be able to start
 
 

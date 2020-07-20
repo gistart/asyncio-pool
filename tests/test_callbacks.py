@@ -31,7 +31,7 @@ async def test_spawn_n():
     async with AioPool(size=2) as pool:
         for i in todo:
             ctx = (pool, i)
-            fut = await pool.spawn_n(wrk(i), cb, ctx)
+            fut = pool.spawn_n(wrk(i), cb, ctx)
             futures.append(fut)
 
     results = [getres.flat(f) for f in futures]
@@ -52,7 +52,7 @@ async def test_map():
 async def test_map_n():
     todo = range(2,11)
     async with AioPool(size=3) as pool:
-        futures = await pool.map_n(wrk, todo, cb)
+        futures = pool.map_n(wrk, todo, cb)
 
     results = [getres.flat(f) for f in futures]
     assert 2 * sum(todo) == sum(results)

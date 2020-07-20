@@ -24,7 +24,7 @@ async def spawn_n_usage(todo=[range(1,51), range(51,101), range(101,200)]):
                 # Returns quickly for all tasks, does not wait for pool space.
                 # Workers are not spawned, they wait for pool space in their
                 # own background tasks.
-                fut = await pool.spawn_n(worker(i))
+                fut = pool.spawn_n(worker(i))
                 futures.append(fut)
         # At this point not a single worker should start.
 
@@ -99,7 +99,7 @@ async def callbacks_usage():
 
     async with AioPool(size=2) as pool:
         for i in todo:
-            fut = await pool.spawn_n(wrk(i), cb, (pool, i))
+            fut = pool.spawn_n(wrk(i), cb, (pool, i))
             futures.append(fut)
 
     results = []
@@ -125,7 +125,7 @@ async def callbacks_usage():
 
 async def exec_usage(todo=range(1,11)):
     async with AioPool(size=4) as pool:
-        futures = await pool.map_n(worker, todo)
+        futures = pool.map_n(worker, todo)
 
         # While other workers are waiting or active, you can "synchronously"
         # execute one task. It does not interrupt  others, just waits for pool
@@ -147,9 +147,9 @@ async def cancel_usage():
 
     pool = AioPool(size=2)
 
-    f_quick = await pool.spawn_n(aio.sleep(0.1))
-    f12 = await pool.spawn(wrk()), await pool.spawn_n(wrk())
-    f35 = await pool.map_n(wrk, range(3))
+    f_quick = pool.spawn_n(aio.sleep(0.1))
+    f12 = await pool.spawn(wrk()), pool.spawn_n(wrk())
+    f35 = pool.map_n(wrk, range(3))
 
     # At this point, if you cancel futures, returned by pool methods,
     # you just won't be able to retrieve spawned task results, task
@@ -184,15 +184,15 @@ async def details(todo=range(1,11)):
     # This code:
     f1 = []
     for i in todo:
-        f1.append(await pool.spawn_n(worker(i)))
+        f1.append(pool.spawn_n(worker(i)))
     # is equivalent to one call of `map_n`:
-    f2 = await pool.map_n(worker, todo)
+    f2 = pool.map_n(worker, todo)
 
     # Afterwards you can await for any given future:
     try:
         assert 3 == await f1[2]  # result of spawn_n(worker(3))
-    except Exception as e:
-        # exception happened in worker (or CancelledError) will be re-raised
+    except BaseException:
+        # exception happened in worker (including CancelledError) will be re-raised
         pass
 
     # Or use `asyncio.wait` to handle results in batches (see `iterwait` also):

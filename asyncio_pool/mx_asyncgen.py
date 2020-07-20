@@ -37,7 +37,7 @@ class MxAsyncGenPool(object):
         '''Spawns coroutines created with `fn` for each item in `iterable`, then
         waits for results with `iterwait`. See docs for `map_n` and `iterwait`.
         '''
-        futures = await self.map_n(fn, iterable, cb, ctx)
+        futures = self.map_n(fn, iterable, cb, ctx)
         generator = iterwait(futures, flat=flat, timeout=timeout,
                 get_result=get_result, yield_when=yield_when, loop=self.loop)
         async for batch in generator:
