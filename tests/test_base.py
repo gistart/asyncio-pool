@@ -86,18 +86,27 @@ async def test_cancel():
         await aio.sleep(0.5)
         return 1
 
-    pool = AioPool(size=2)
+    async def wrk_safe(*arg, **kw):
+        try:
+            await aio.sleep(0.5)
+        except aio.CancelledError:
+            await aio.sleep(0.1)  # simulate cleanup
+            pass
+        return 1
+
+    pool = AioPool(size=5)
 
     f_quick = pool.spawn_n(aio.sleep(0.15))
-    f12 = await pool.spawn(wrk()), pool.spawn_n(wrk())
-    f35 = pool.map_n(wrk, range(3))
+    f_safe = await pool.spawn(wrk_safe())
+    f3 = await pool.spawn(wrk())
+    pool.spawn_n(wrk())
+    f567 = pool.map_n(wrk, range(3))
 
     # cancel some
     await aio.sleep(0.1)
-    cancelled, results = await pool.cancel(f12[0], f35[2])  # running and waiting
-    assert 2 == cancelled  # none of them had time to finish
-    assert 2 == len(results) and \
-        all(isinstance(res, aio.CancelledError) for res in results)
+    cancelled, results = await pool.cancel(f3, f567[2])  # running and waiting
+    assert cancelled == len(results) == 2  # none of them had time to finish
+    assert all(isinstance(res, aio.CancelledError) for res in results)
 
     # cancel all others
     await aio.sleep(0.1)
@@ -106,11 +115,12 @@ async def test_cancel():
     assert f_quick.done() and f_quick.result() is None
 
     cancelled, results = await pool.cancel()  # all
-    assert 3 == cancelled
-    assert len(results) == 3 and \
-        all(isinstance(res, aio.CancelledError) for res in results)
+    assert cancelled == len(results) == 4
+    assert f_safe.done() and f_safe.result() == 1  # could recover
+    # the others could not
+    assert sum(isinstance(res, aio.CancelledError) for res in results) == 3
 
-    assert await pool.join()  # joins successfully
+    assert await pool.join()  # joins successfully (basically no-op)
 
 
 @pytest.mark.asyncio
