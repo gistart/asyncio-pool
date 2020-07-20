@@ -26,7 +26,7 @@ async def test_concurrency():
 
     pool_size = 5
     async with AioPool(size=pool_size) as pool:
-        futures = await pool.map_n(wrk, todo)
+        futures = pool.map_n(wrk, todo)
 
         await aio.sleep(0.01)
 
@@ -70,7 +70,7 @@ async def test_outer_join():
     loop = aio.get_event_loop()
     pool = AioPool(size=100)
 
-    tasks = await pool.map_n(inner, todo)
+    tasks = pool.map_n(inner, todo)
     joined = [loop.create_task(outer(j, pool)) for j in to_release]
     await pool.join()
 
@@ -88,9 +88,9 @@ async def test_cancel():
 
     pool = AioPool(size=2)
 
-    f_quick = await pool.spawn_n(aio.sleep(0.15))
-    f12 = await pool.spawn(wrk()), await pool.spawn_n(wrk())
-    f35 = await pool.map_n(wrk, range(3))
+    f_quick = pool.spawn_n(aio.sleep(0.15))
+    f12 = await pool.spawn(wrk()), pool.spawn_n(wrk())
+    f35 = pool.map_n(wrk, range(3))
 
     # cancel some
     await aio.sleep(0.1)
