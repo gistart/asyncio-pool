@@ -12,7 +12,8 @@ jobs:
     name: run all tests
     runs-on: ubuntu-18.04
     steps:
-    - name: setup-and-test
-      run: |
-        sh ./setup_dev.sh
-        sh ./run_tests.sh
+    - uses: actions/checkout@v2
+    - name: setup
+      run: sh ./setup_dev.sh
+    - name: test
+      run: sh ./run_tests.sh
