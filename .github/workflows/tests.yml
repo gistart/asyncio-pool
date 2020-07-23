@@ -14,6 +14,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: setup
-      run: sh ./setup_dev.sh
+      run: |
+        apt install python3-venv
+        sh ./setup_dev.sh
     - name: test
       run: sh ./run_tests.sh
