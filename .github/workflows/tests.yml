@@ -1,0 +1,19 @@
+name: test-all
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: run all tests
+    runs-on: ubuntu-18.04
+
+  steps:
+    - name: setup-and-test
+      run: |
+        sh ./setup_dev.sh
+        sh ./run_tests.sh
