@@ -11,11 +11,17 @@ jobs:
   test:
     name: run all tests
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8, 'pypy3']
     steps:
-    - uses: actions/checkout@v2
-    - name: setup
-      run: |
-        sudo apt install python3-venv
-        sh ./setup_dev.sh
-    - name: test
-      run: sh ./run_tests.sh
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: python${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: pip-requirements
+      run: pip install --upgrade pytest pytest-asyncio async-timeout
+    - name: run-test
+      run: pytest --continue-on-collection-errors ./tests
