@@ -11,8 +11,7 @@ jobs:
   test:
     name: run all tests
     runs-on: ubuntu-18.04
-
-  steps:
+    steps:
     - name: setup-and-test
       run: |
         sh ./setup_dev.sh
