@@ -106,7 +106,7 @@ class BaseAioPool(object):
         res, exc, tb = None, None, None
         try:
             res = await coro
-        except Exception as _exc:
+        except BaseException as _exc:
             exc = _exc
             tb = traceback.format_exc()
         finally:
@@ -140,7 +140,7 @@ class BaseAioPool(object):
         acq_error = False
         try:
             await self.semaphore.acquire()
-        except Exception as e:
+        except BaseException as e:
             acq_error = True
             if not future.done():
                 future.set_exception(e)
@@ -182,7 +182,7 @@ class BaseAioPool(object):
         self._waiting[future] = self.loop.create_future()  # as a placeholder
         return await self._spawn(future, coro, cb=cb, ctx=ctx)
 
-    async def spawn_n(self, coro, cb=None, ctx=None):
+    def spawn_n(self, coro, cb=None, ctx=None):
         '''Creates waiting task for given `coro` regardless of pool space. If
         pool is not full, this task will be executed very soon. Main difference
         is that `spawn_n` does not block and returns future very quickly.
@@ -203,7 +203,7 @@ class BaseAioPool(object):
         '''
         return await (await self.spawn(coro, cb, ctx))
 
-    async def map_n(self, fn, iterable, cb=None, ctx=None):
+    def map_n(self, fn, iterable, cb=None, ctx=None):
         '''Creates coroutine with `fn` function for each item in `iterable`,
         spawns each of them with `spawn_n`, returning futures.
 
@@ -211,7 +211,7 @@ class BaseAioPool(object):
         '''
         futures = []
         for it in iterable:
-            fut = await self.spawn_n(fn(it), cb, ctx)
+            fut = self.spawn_n(fn(it), cb, ctx)
             futures.append(fut)
         return futures
 

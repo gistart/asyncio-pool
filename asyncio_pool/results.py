@@ -14,7 +14,7 @@ def result_noraise(future, flat=True):
     try:
         res = future.result()
         return res if flat else (res, None)
-    except Exception as exc:
+    except BaseException as exc:
         return exc if flat else (None, exc)
 
 

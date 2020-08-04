@@ -60,7 +60,7 @@ class MxAsyncIterPool(object):
 
             async def __anext__(_self):
                 if not hasattr(_self, 'waiter'):
-                    _self.waiter = mk_waiter(await mk_map())
+                    _self.waiter = mk_waiter(mk_map())
                 return await _self.waiter.__anext__()
 
         return _itermap()
