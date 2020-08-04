@@ -1,15 +1,16 @@
 #! /bin/sh
 
+pypy3=pypy3
 py35=python3.5
-pypy3=pypy3  # also 3.5 currently
 py36=python3.6
 py37=python3.7
-#pypy3=/opt/pypy3/pypy3/bin/pypy3
+py38=python3.8
+py39=python3.9
 
-default_env=$py36
+default_env=$py37
 
 
-for py in $py35 $pypy3 $py36 $py37
+for py in $pypy3 $py35 $py36 $py37 $py38 $py39
 do
     if [ -x "$(command -v $py)" ]; then
         pyname="$(basename $py)"

@@ -15,7 +15,7 @@ readme = '\n\n'.join(readme_lines)
 
 setuptools.setup(
     name='asyncio_pool',
-    version='0.4.1',
+    version='0.5.0',
     author='gistart',
     author_email='gistart@yandex.ru',
     description='Pool of asyncio coroutines with familiar interface',
@@ -33,7 +33,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Development Status :: 4 - Beta",
         "Framework :: AsyncIO",
     )
 )
