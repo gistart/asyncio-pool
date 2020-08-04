@@ -24,14 +24,15 @@ class BaseAioPool(object):
         futures, not "native" ones, returned by `pool.create_task` or used for
         `await`. Read more about this in readme and docstrings below.
         '''
-        self.loop = loop or aio.get_event_loop()
+
+        self.loop = loop or _get_loop()
 
         self.size = size
         self._executed = 0
         self._joined = set()
         self._waiting = {}  # future -> task
         self._active = {}  # future -> task
-        self.semaphore = aio.Semaphore(value=self.size, loop=self.loop)
+        self.semaphore = aio.Semaphore(value=self.size)
 
     async def __aenter__(self):
         return self
@@ -276,3 +277,13 @@ class BaseAioPool(object):
         await aio.wait(tasks)  # let them actually cancel
         # need to collect them anyway, to supress warnings
         return cancelled, [get_result(fut) for fut in _futures]
+
+
+def _get_loop():
+    """
+    Backward compatibility w/ py<3.8
+    """
+
+    if hasattr(aio, 'get_running_loop'):
+        return aio.get_running_loop()
+    return aio.get_event_loop()

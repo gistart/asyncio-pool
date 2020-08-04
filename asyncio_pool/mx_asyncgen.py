@@ -39,6 +39,6 @@ class MxAsyncGenPool(object):
         '''
         futures = self.map_n(fn, iterable, cb, ctx)
         generator = iterwait(futures, flat=flat, timeout=timeout,
-                get_result=get_result, yield_when=yield_when, loop=self.loop)
+                get_result=get_result, yield_when=yield_when)
         async for batch in generator:
             yield batch  # TODO is it possible to return a generator?
