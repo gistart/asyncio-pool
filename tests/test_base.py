@@ -1,15 +1,9 @@
 # coding: utf8
 
-import sys
 import pytest
-import warnings
 import asyncio as aio
-from itertools import chain
 from asyncio_pool import AioPool
 from async_timeout import timeout
-
-
-pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
 
 
 @pytest.mark.asyncio
@@ -91,7 +85,6 @@ async def test_cancel():
             await aio.sleep(0.5)
         except aio.CancelledError:
             await aio.sleep(0.1)  # simulate cleanup
-            pass
         return 1
 
     pool = AioPool(size=5)

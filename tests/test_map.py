@@ -1,12 +1,8 @@
 # coding: utf8
 
-import sys
 import pytest
 import asyncio as aio
 from asyncio_pool import AioPool, getres
-
-
-pytestmark = pytest.mark.filterwarnings('ignore:coroutine')
 
 
 async def wrk(n):
@@ -56,3 +52,20 @@ async def test_itermap():
             else:
                 assert False  # should not get here
             i += 1  # does not support enumerate btw (
+
+
+@pytest.mark.asyncio
+async def test_itermap_cancel():
+
+    async def wrk(n):
+        await aio.sleep(n / 100)
+        return n
+
+    todo = range(1, 101)
+
+    async with AioPool(5) as pool:
+        async for res in pool.itermap(wrk, todo, yield_when=aio.FIRST_COMPLETED):
+            if res == 13:
+                cancelled, _ = await pool.cancel()
+                break
+    assert cancelled == 100 - 13

@@ -143,6 +143,7 @@ class BaseAioPool(object):
             await self.semaphore.acquire()
         except BaseException as e:
             acq_error = True
+            coro.close()
             if not future.done():
                 future.set_exception(e)
         finally:
@@ -273,8 +274,10 @@ class BaseAioPool(object):
                     tasks.append(task)
                     _futures.append(fut)
 
-        cancelled = sum(1 for task in tasks if task.cancel())
-        await aio.wait(tasks)  # let them actually cancel
+        cancelled = 0
+        if tasks:
+            cancelled = sum(1 for task in tasks if task.cancel())
+            await aio.wait(tasks)  # let them actually cancel
         # need to collect them anyway, to supress warnings
         return cancelled, [get_result(fut) for fut in _futures]
 
