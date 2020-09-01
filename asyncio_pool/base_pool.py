@@ -143,6 +143,7 @@ class BaseAioPool(object):
             await self.semaphore.acquire()
         except BaseException as e:
             acq_error = True
+            coro.close()
             if not future.done():
                 future.set_exception(e)
         finally:
