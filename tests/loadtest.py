@@ -1,5 +1,3 @@
-# coding: utf8
-
 import os
 import sys
 curr_dir = os.path.dirname(os.path.abspath(__file__))

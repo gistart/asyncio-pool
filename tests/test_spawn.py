@@ -1,5 +1,3 @@
-# coding: utf8
-
 import pytest
 import asyncio as aio
 from asyncio_pool import AioPool

@@ -1,4 +1,3 @@
-# coding: utf8
 '''Pool of asyncio coroutines with familiar interface, python3.5+ friendly'''
 
 import traceback

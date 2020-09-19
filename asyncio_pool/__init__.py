@@ -1,5 +1,3 @@
-# coding: utf8
-
 import sys
 
 from .results import getres
