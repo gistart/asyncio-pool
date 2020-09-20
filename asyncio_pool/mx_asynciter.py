@@ -1,4 +1,3 @@
-# coding: utf8
 '''Mixin for BaseAioPool with async generator _simulation_ for python 3.5'''
 
 import asyncio as aio
