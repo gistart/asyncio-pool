@@ -6,13 +6,14 @@ py36=python3.6
 py37=python3.7
 py38=python3.8
 py39=python3.9
+py310=python3.10
 
 default_env=$py37
 
 
 todo=${@:-"./tests"}
 
-for py in $py35 $py36 $py37 $py38 $py39 $pypy3
+for py in $pypy3 $py35 $py36 $py37 $py38 $py39 $py310
 do
     echo ""
     if [ -x "$(command -v $py)" ]; then
