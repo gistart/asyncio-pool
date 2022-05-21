@@ -13,7 +13,7 @@ readme = '\n\n'.join(readme_lines)
 
 setuptools.setup(
     name='asyncio_pool',
-    version='0.5.1',
+    version='0.6.0',
     author='gistart',
     author_email='gistart@yandex.ru',
     description='Pool of asyncio coroutines with familiar interface',
