@@ -5,7 +5,7 @@ from .results import getres
 
 
 async def iterwait(futures, *, flat=True, get_result=getres.flat,
-        timeout=None, yield_when=aio.ALL_COMPLETED, loop=None):
+        timeout=None, yield_when=aio.ALL_COMPLETED):
     '''Wraps `asyncio.wait` into asynchronous generator, accessible with
     `async for` syntax. May be useful in conjunction with `spawn_n`.
 
@@ -19,7 +19,7 @@ async def iterwait(futures, *, flat=True, get_result=getres.flat,
     _futures = futures[:]
     while _futures:
         done, _futures = await aio.wait(_futures, timeout=timeout,
-                                        return_when=yield_when, loop=loop)
+                                        return_when=yield_when)
         if flat:
             for fut in done:
                 yield get_result(fut)
