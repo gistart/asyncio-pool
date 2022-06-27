@@ -22,6 +22,7 @@ setuptools.setup(
     url=github_url,
     license='MIT',
     packages=['asyncio_pool'],
+    package_data={'asyncio_pool': ['__init__.pyi', 'py.typed']},
     # install_requires=['asyncio'],  # where " openstack/deb-python-trollius asyncio" comes from???
     python_requires='>=3.5',
     classifiers=(

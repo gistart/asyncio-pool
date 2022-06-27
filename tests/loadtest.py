@@ -83,7 +83,7 @@ if __name__ == "__main__":
           (args.task_duration * (args.tasks / args.pool_size)))
 
     ts_start = time.perf_counter()
-    m = methods.get(args.method)(args.tasks, args.pool_size, args.task_duration)
+    m = methods[args.method](args.tasks, args.pool_size, args.task_duration)
     aio.get_event_loop().run_until_complete(m)
     exec_time = time.perf_counter() - ts_start
     print_stats(args, exec_time)

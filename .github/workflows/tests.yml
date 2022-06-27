@@ -8,12 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  test-without-mypy:
     name: run all tests
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, '3.10', 'pypy3']
+        python-version: ['pypy3']
     steps:
     - name: checkout
       uses: actions/checkout@v2
@@ -25,3 +25,20 @@ jobs:
       run: pip install --upgrade -r reqs-test.txt
     - name: run-test
       run: pytest -sv --continue-on-collection-errors ./tests
+  test:
+    name: run all tests
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9, '3.10']
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: python${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: pip-requirements
+      run: pip install --upgrade -r reqs-test.txt
+    - name: run-test
+      run: pytest -sv --continue-on-collection-errors --mypy ./tests

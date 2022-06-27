@@ -13,7 +13,8 @@ default_env=$py37
 
 todo=${@:-"./tests"}
 
-for py in $pypy3 $py35 $py36 $py37 $py38 $py39 $py310
+# test without mypy
+for py in $pypy3 $py35
 do
     echo ""
     if [ -x "$(command -v $py)" ]; then
@@ -25,6 +26,25 @@ do
         else
             echo "$pyname: running for $todo"
             $envname/bin/pytest --continue-on-collection-errors $todo
+        fi
+    else
+        echo "$py: not found"
+    fi
+done
+
+# test >=3.6 with mypy
+for py in $py36 $py37 $py38 $py39 $py310
+do
+    echo ""
+    if [ -x "$(command -v $py)" ]; then
+        pyname="$(basename $py)"
+        envname=".env_$pyname"
+
+        if ! [ -d $envname ]; then
+            echo "$pyname: virtual env does not exist"
+        else
+            echo "$pyname: running for $todo (with mypy)"
+            $envname/bin/pytest --mypy --continue-on-collection-errors $todo
         fi
     else
         echo "$py: not found"
