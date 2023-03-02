@@ -19,7 +19,7 @@ class BaseAioPool(object):
 
         Support asynchronous context management protocol (`aenter`, `aexit`).
 
-        The main idea behind spwaning methods is -- they return newly created
+        The main idea behind spawning methods is -- they return newly created
         futures, not "native" ones, returned by `pool.create_task` or used for
         `await`. Read more about this in readme and docstrings below.
         '''
@@ -164,7 +164,7 @@ class BaseAioPool(object):
         If callback `cb` coroutine function (not coroutine itself!) is passed,
         `coro` result won't be assigned to created future, instead, `cb` will
         be executed with it as a first positional argument. Callback function
-        should accept 1,2 or 3 positional arguments. Full callback sigature is
+        should accept 1,2 or 3 positional arguments. Full callback signature is
         `cb(res, err, ctx)`. It makes no sense to create a callback without
         `coro` result, so first positional argument is mandatory.
 
@@ -224,7 +224,7 @@ class BaseAioPool(object):
 
         `get_result` is function, that accepts future as only positional
         argument, whose goal is to extract result from future. You can pass
-        your own, or use inluded `getres` object, that has 3 extractors:
+        your own, or use included `getres` object, that has 3 extractors:
         `getres.dont` will return future untouched, `getres.flat` will return
         exception object if coroutine crashed or was cancelled, otherwise will
         return result of a coroutine (or of the callback), `getres.pair` will
@@ -251,7 +251,7 @@ class BaseAioPool(object):
 
     async def cancel(self, *futures, get_result=getres.flat):
         '''Cancels spawned or waiting tasks, found by their `futures`. If no
-        `futures` are passed -- cancels all spwaned and waiting tasks.
+        `futures` are passed -- cancels all spawned and waiting tasks.
 
         Cancelling futures, returned by pool methods, usually won't help you
         to cancel executing tasks, so you have to use this method.
@@ -277,7 +277,7 @@ class BaseAioPool(object):
         if tasks:
             cancelled = sum(1 for task in tasks if task.cancel())
             await aio.wait(tasks)  # let them actually cancel
-        # need to collect them anyway, to supress warnings
+        # need to collect them anyway, to suppress warnings
         return cancelled, [get_result(fut) for fut in _futures]
 
 
