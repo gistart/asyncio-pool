@@ -50,7 +50,7 @@ Spawns tasks with `map_n(fn, iterable, cb, ctx)`, then waits for results with `a
 
 `spawn` and `map` methods is probably what you should use in 99% of cases. Their overhead is minimal (~3% execution time), and even in worst cases memory usage is insignificant.
 
-`spawn_n`, `map_n` and `itermap` methods give you more control and flexibily, but they come with a price of higher overhead. They spawn all tasks that you want, and most of the tasks wait their turn "in background". If you spawn too much (10**6+ tasks) -- you'll use most of the memory you have in system, also you'll lose a lot of time on "concurrency management" of all the tasks spawned.
+`spawn_n`, `map_n` and `itermap` methods give you more control and flexibility, but they come with a price of higher overhead. They spawn all tasks that you want, and most of the tasks wait their turn "in background". If you spawn too much (10**6+ tasks) -- you'll use most of the memory you have in system, also you'll lose a lot of time on "concurrency management" of all the tasks spawned.
 
 Play with `python tests/loadtest.py -h` to understand what you want to use.
 
