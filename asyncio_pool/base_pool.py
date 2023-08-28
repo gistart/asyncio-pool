@@ -238,6 +238,9 @@ class BaseAioPool(object):
             fut = await self.spawn(fn(it), cb, ctx)
             futures.append(fut)
 
+        if not futures:
+            return []
+
         await aio.wait(futures)
         return [get_result(fut) for fut in futures]
 
