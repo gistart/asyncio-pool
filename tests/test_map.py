@@ -17,6 +17,14 @@ async def test_map_simple():
 
 
 @pytest.mark.asyncio
+async def test_map_empty():
+    task = []
+    pool = AioPool(size=7)
+    res = await pool.map(wrk, task)
+    assert res == []
+
+
+@pytest.mark.asyncio
 async def test_map_crash():
     task = range(5)
     pool = AioPool(size=10)
@@ -50,6 +58,17 @@ async def test_itermap():
             else:
                 assert False  # should not get here
             i += 1  # does not support enumerate btw (
+
+
+@pytest.mark.asyncio
+async def test_itermap_empty():
+    async def wrk(n):
+        await aio.sleep(n)
+        return n
+
+    async with AioPool(size=3) as pool:
+        async for res in pool.itermap(wrk, [], flat=False, timeout=0.6):
+            assert False
 
 
 @pytest.mark.asyncio
